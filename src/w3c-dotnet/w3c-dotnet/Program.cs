@@ -1,48 +1,59 @@
-﻿// See https://aka.ms/new-console-template for more information
-using System;
+﻿using System;
 using System.Diagnostics;
 
-var upstreamActivity = new Activity("Upstream");
+var upstreamActivity = new Activity("Context-Id: 0");
 
 upstreamActivity.Start();
-ConsoleColor.Green.WriteLine(upstreamActivity.OperationName);
-ConsoleColor.Cyan.Write("traceparent: ");
-PrintActivitySegments(activity: upstreamActivity.Id);
-Console.WriteLine("upstream traceparent: {0}", upstreamActivity.ParentId);
-CallChildActivity(3);
+ConsoleColor.Green.WriteLine($"Starting w3c context trace");
+
+ConsoleColor.DarkCyan.Write($"ParentId:\t");
+var cursorPosition = Console.GetCursorPosition();
+Console.SetCursorPosition(50, cursorPosition.Top);
+PrintActivitySegments(activity: upstreamActivity);
+
+var rnd = new Random().Next(3, 20);
+for (int i = 0; i < rnd; i++)
+{
+    TracedFunction(new Random().Next(3, 10), 0);
+}
 upstreamActivity.Stop();
 
-void CallChildActivity(int nested)
+void TracedFunction(int nested, int level)
 {
-    if (nested-- == 0)
+    if (nested == 0)
         return;
-    var downstreamActivity = new Activity($"Context-Id: {nested}");
-    downstreamActivity.Start();
-    ConsoleColor.DarkGray.WriteLine($"{downstreamActivity.OperationName} {downstreamActivity.SpanId.ToString()} {downstreamActivity.TraceId.ToString()}" );
+    var activity = new Activity($"Context-Id: {nested}");
+    activity.Start();
 
-    ConsoleColor.Cyan.Write("traceparent (Id):       ");
-    PrintActivitySegments(activity: downstreamActivity.Id);
+    ConsoleColor.Cyan.Write($"{new String(' ', level)}");
+    PrintActivitySegments(activity);
 
-    ConsoleColor.Cyan.Write("traceparent (ParentId): ");
-    PrintActivitySegments(activity: downstreamActivity.ParentId);
-    
-    CallChildActivity(nested);
+    var rnd = new Random().Next(0, nested);
+    TracedFunction(rnd, level + 1);
 
-    downstreamActivity.Stop();
+    activity.Stop();
 }
 
-void PrintActivitySegments(string? activity)
+void PrintActivitySegments(Activity activity)
 {
     if (activity == null) return;
-
-    var activitySegment = activity.Split("-");
+        
+    if (activity.Parent != null)
+    {
+        ConsoleColor.Gray.Write($" {activity.SpanId}");
+        ConsoleColor.DarkGray.Write($" << {activity.Parent.SpanId}");
+    }
+    
+    var activitySegment = activity.Id.Split("-");
+    var cursorPosition = Console.GetCursorPosition();
+    Console.SetCursorPosition(40, cursorPosition.Top);
     ConsoleColor.DarkCyan.Write(activitySegment[0]);
     ConsoleColor.DarkGray.Write("-");
-    ConsoleColor.DarkGreen.Write(activitySegment[1]);
+    ConsoleColor.Yellow.Write(activitySegment[1]);
     ConsoleColor.DarkGray.Write("-");
-    ConsoleColor.DarkBlue.Write(activitySegment[2]);
+    ConsoleColor.Green.Write(activitySegment[2]);
     ConsoleColor.DarkGray.Write("-");
-    ConsoleColor.DarkMagenta.WriteLine(activitySegment[3]);
+    ConsoleColor.Cyan.WriteLine(activitySegment[3]);
 }
 
 #region Extension
