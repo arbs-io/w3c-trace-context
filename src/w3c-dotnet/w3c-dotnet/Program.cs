@@ -8,7 +8,7 @@ ConsoleColor.Green.WriteLine($"Starting w3c context trace");
 
 ConsoleColor.DarkCyan.Write($"ParentId:\t");
 var cursorPosition = Console.GetCursorPosition();
-Console.SetCursorPosition(50, cursorPosition.Top);
+Console.SetCursorPosition(42, cursorPosition.Top);
 PrintActivitySegments(activity: upstreamActivity);
 
 var rnd = new Random().Next(3, 20);
@@ -46,7 +46,7 @@ void PrintActivitySegments(Activity activity)
     
     var activitySegment = activity.Id.Split("-");
     var cursorPosition = Console.GetCursorPosition();
-    Console.SetCursorPosition(40, cursorPosition.Top);
+    Console.SetCursorPosition(42, cursorPosition.Top);
     ConsoleColor.DarkCyan.Write(activitySegment[0]);
     ConsoleColor.DarkGray.Write("-");
     ConsoleColor.Yellow.Write(activitySegment[1]);
